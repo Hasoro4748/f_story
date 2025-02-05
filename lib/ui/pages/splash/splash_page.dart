@@ -4,32 +4,8 @@ import 'package:class_f_story/data/gvm/session_gvm.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// class SplashPage extends ConsumerStatefulWidget {
-//   const SplashPage({super.key});
-//
-//   @override
-//   Widget build(BuildContext context, WidgetRef ref) {
-//     //한번도 로그인을 안했을시 2초간 gif 보여줌
-//     // 로그인 토큰이 있다면 바로 페이지 이동
-//     ref.read(sessionProvider.notifier).autoLogin();
-//     return Scaffold(
-//       body: Center(
-//         child: Image.asset(
-//           'assets/splash.gif',
-//           width: double.infinity,
-//           height: double.infinity,
-//           fit: BoxFit.cover,
-//         ),
-//       ),
-//     );
-//   }
-//
-//   @override
-//   ConsumerState<ConsumerStatefulWidget> createState() {
-//     throw UnimplementedError();
-//   }
-// }
-
+// ConsumerWidget ---> Stateless
+// ConsumerStatefulWidget --> Stateful
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
@@ -40,20 +16,25 @@ class SplashPage extends ConsumerStatefulWidget {
 class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
+    // 단 한번 실행되는 코드 -> 인스턴스 화 될때
     super.initState();
-  }
+    // 1. 화면을 렌더링 시키기 전에 로그인 유무 확인 - 메서드
+    _checkLoginStates();
+  } // end of initState
 
-  // 로근인 상태 확인 후 자동 로그인 시도 또는 로그인 페이지 이동 처리
+  // 로그인 상태 확인 후 자동 로그인 시도 또는 로그인 페이지 이동 처리
   // 1. 토큰 추출
-  // 2. 토큰 유무 확인( 없다면 --> 로그인 페이지 이동 처리)
+  // 2. 토큰 유무 확인 ( 없다면 --> 로그인 페이지 이동 처리)
+  // 2 - 1  로그인 페이지 이동 처리 (이미지 2초간 보여주고 이동 시키기 )
   Future<void> _checkLoginStates() async {
     try {
+      // I/O
       String? accessToken = await secureStorage.read(key: 'accessToken');
       if (accessToken == null) {
-        // 화면 이동 처리
         _navigateToLogin();
-        return;
+        return; // 실행의 제어권 반납
       }
+      // accessToken null 아니라면
       SessionGVM sessionGVM = ref.read(sessionProvider.notifier);
       await sessionGVM.autoLogin();
     } catch (e, stackTrace) {
@@ -62,15 +43,19 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     }
   }
 
-  // 로그인 페이지 이동하는 메서드
+  // 로그인 페이지 이동 하는 매서드
   void _navigateToLogin() {
+    // 2초 동안 대기 후 로그인 페이지 이동 처리
     Future.delayed(const Duration(seconds: 2), () {
-      // mounted --> StatefulWidget이 가지고 있다.
-      // 네비게이션 이동시 mounted를 확인하는 이유
-      // 1. 사용자가 2초 대기중에 다른 페이지로 이동하면 이 위젯이 dispose 될 수 있다.
-      // 2. dispose 된 위젯을 setState()
-      if (mounted) {}
-      Navigator.popAndPushNamed(context, '/login');
+      // mounted --> StatefulWidget 이 가지고 있다.
+      // 네이게이션 이동시 mounted 을 확인하는 이유는
+      // 1. 사용자가 2초 대기 중에 다른 페이지로 이동하면 이 위젯이 dispose 될 수 있다.
+      // 2. disponse 된  위젯을 setState() 또는 Navigator를 호출하면 예외가 발생해서 앱이 종료 될 수 있다.
+      // 따라서 mounted 변수는 현재 위젯 화면이 여전히 존재 하는가 여부를 판단 한다.
+      // 방어적 코드 작성
+      if (mounted) {
+        Navigator.popAndPushNamed(context, '/login');
+      }
     });
   }
 
@@ -88,3 +73,27 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     );
   }
 }
+
+//
+// class SplashPage extends ConsumerStatefulWidget {
+//   const SplashPage({super.key});
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     // 자동 로그인 호출
+//     // 단 한번도 로그인을 안했을 경우 --> 2초간 gif 이미지 보여주기
+//     // 로그인 한적이 있다면(토큰이 있다면) --> 바로 페이지 이동 처리
+//     ref.read(sessionProvider.notifier).autoLogin();
+//
+//     return Scaffold(
+//       body: Center(
+//         child: Image.asset(
+//           'assets/splash.gif',
+//           width: double.infinity,
+//           height: double.infinity,
+//           fit: BoxFit.cover,
+//         ),
+//       ),
+//     );
+//   }
+// }

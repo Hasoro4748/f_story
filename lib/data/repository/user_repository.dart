@@ -32,6 +32,7 @@ class UserRepository {
     String accessToken = response.headers['Authorization']?[0] ?? '';
     logger.i(accessToken);
     Map<String, dynamic> responseBody = response.data; // HTTP 응답 메세지 바디
+    logger.i(responseBody);
     return (responseBody, accessToken);
   }
 
